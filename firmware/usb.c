@@ -28,6 +28,9 @@
 #include "storage.h"
 #include "util.h"
 
+#include "usb21_standard.h"
+#include "webusb.h"
+
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
 #define USB_INTERFACE_INDEX_DEBUG 1
@@ -51,8 +54,8 @@ static const struct usb_device_descriptor dev_descr = {
 	.bDeviceSubClass = 0,
 	.bDeviceProtocol = 0,
 	.bMaxPacketSize0 = 64,
-	.idVendor = 0x534c,
-	.idProduct = 0x0001,
+	.idVendor = 0x2341,
+	.idProduct = 0x8036,
 	.bcdDevice = 0x0100,
 	.iManufacturer = 1,
 	.iProduct = 2,
@@ -381,12 +384,37 @@ static void hid_set_config(usbd_device *dev, uint16_t wValue)
 }
 
 static usbd_device *usbd_dev;
-static uint8_t usbd_control_buffer[128];
+static uint8_t usbd_control_buffer[256] __attribute__ ((aligned (2)));
+
+#define USB_VERSION 0x0210
+#define WINUSB_AVAILABLE 0
+#define WEBUSB_AVAILABLE 1
+
+#if (USB_VERSION >= 0x0210)
+static const struct usb_device_capability_descriptor* capabilities[] = {
+#if WINUSB_AVAILABLE
+    (const struct usb_device_capability_descriptor*)&winusb_platform_capability_descriptor,
+#endif
+#if WEBUSB_AVAILABLE
+    (const struct usb_device_capability_descriptor*)&webusb_platform_capability_descriptor,
+#endif
+};
+
+static const struct usb_bos_descriptor bos_descriptor = {
+	.bLength = USB_DT_BOS_SIZE,
+	.bDescriptorType = USB_DT_BOS,
+	.bNumDeviceCaps = sizeof(capabilities)/sizeof(capabilities[0]),
+	.capabilities = capabilities
+};
+#endif
 
 void usbInit(void)
 {
-	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
+	usbd_dev = usbd_init(&otgfs_usb_driver, &dev_descr, &config, usb_strings, sizeof(usb_strings)/sizeof(const char *), usbd_control_buffer, sizeof(usbd_control_buffer));
 	usbd_register_set_config_callback(usbd_dev, hid_set_config);
+#if (USB_VERSION >= 0x0210)
+	usb21_setup(usbd_dev, &bos_descriptor);
+#endif
 }
 
 void usbPoll(void)

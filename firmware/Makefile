@@ -3,6 +3,8 @@ APPVER = 1.0.0
 NAME  = trezor
 
 OBJS += usb.o
+OBJS += usb21_standard.o
+OBJS += webusb.o
 OBJS += u2f.o
 OBJS += messages.o
 OBJS += storage.o
