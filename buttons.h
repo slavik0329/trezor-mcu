@@ -35,7 +35,7 @@ extern struct buttonState button;
 void buttonUpdate(void);
 
 #define BTN_PORT	GPIOC
-#define BTN_PIN_YES	GPIO2
-#define BTN_PIN_NO	GPIO5
+#define BTN_PIN_YES	GPIO10
+#define BTN_PIN_NO	GPIO12
 
 #endif
