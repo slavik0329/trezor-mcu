@@ -117,9 +117,6 @@ void bootloader_loop(void)
 
 int check_firmware_sanity(void)
 {
-	if (memcmp((void *)FLASH_META_MAGIC, "TRZR", 4)) { // magic does not match
-		return 0;
-	}
 	if (*((uint32_t *)FLASH_META_CODELEN) < 4096) { // firmware reports smaller size than 4kB
 		return 0;
 	}
